@@ -1,6 +1,6 @@
 import os
 import requests
-import fitz
+import fitz  # PyMuPDF
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from bs4 import BeautifulSoup
@@ -11,7 +11,7 @@ HEADERS = {"Content-Type": "application/json"}
 MODEL = "llama3.2"
 
 class PDFScraperApp:
-    def __init__(self, root):  # ✅ Fixed __init__ method
+    def __init__(self, root):
         self.root = root
         self.root.title("Website PDF Scraper & Summarizer")
 
@@ -55,8 +55,7 @@ class PDFScraperApp:
                 return
 
             soup = BeautifulSoup(response.text, "html.parser")
-            self.pdf_links = [urljoin(url, a["href"]) for a in soup.find_all("a", href=True) if
-                              a["href"].endswith(".pdf")]
+            self.pdf_links = [urljoin(url, a["href"]) for a in soup.find_all("a", href=True) if a["href"].endswith(".pdf")]
 
             self.pdf_listbox.delete(0, tk.END)
             for pdf in self.pdf_links:
@@ -85,8 +84,7 @@ class PDFScraperApp:
 
             summary = self.summarize_pdf(pdf_filename)
             self.summary_text.delete(1.0, tk.END)
-            self.summary_text.insert(tk.END, str(summary))  # ✅ Ensure summary is a string
-
+            self.summary_text.insert(tk.END, str(summary))
 
             os.remove(pdf_filename)  # Remove after summarization
 
@@ -94,7 +92,7 @@ class PDFScraperApp:
             messagebox.showerror("Error", f"Failed to process PDF: {str(e)}")
 
     def summarize_pdf(self, pdf_path):
-        """Extract text from PDF and summarize it using Ollama."""
+        """Extract text from PDF and summarize it using Ollama API."""
         try:
             text = ""
             with fitz.open(pdf_path) as doc:
@@ -103,14 +101,9 @@ class PDFScraperApp:
 
             if not text.strip():
                 return "No readable text found in PDF."
-            #
-            # response = ollama.chat(model="llama3.2", messages=[{"role": "user", "content": f"Summarize this:\n{text}"}])
-            # return response["message"]["content"]
-        #     --------------------
 
             messages = [
-                {"role": "system", "content": "You are an assistant that analyzes the contents of a text file \
-            and provides the summery of every pdf page, ignoring text that might be navigation related. write who is this person and what do you feel about this person "},
+                {"role": "system", "content": "You are an assistant that analyzes the contents of a text file and provides a summary of every PDF page, ignoring text that might be navigation-related. Also, analyze the document's purpose."},
                 {"role": "user", "content": f"Summarize this:\n{text}"}
             ]
             payload = {
@@ -120,12 +113,9 @@ class PDFScraperApp:
             }
 
             response = requests.post(OLLAMA_API, json=payload, headers=HEADERS)
-
-
-
+            response_data = response.json()
 
             return response.json()['message']['content']
-        # ============
 
         except Exception as e:
             return f"Error extracting or summarizing text: {str(e)}"
