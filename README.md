@@ -22,3 +22,4 @@ then edit your api key:
 OPENAI_API_KEY=your_api_key_here
 run the script:
 python hello_to_openai.py
+
