@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
+
 api_key = "YOUR_API_KEY_HERE"
 if not api_key:
     raise ValueError("API key not found. Make sure you set OPENAI_API_KEY in your .env file.")
